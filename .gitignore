@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+venv/
+
+# Model checkpoints and large artifacts
+outputs/checkpoints/
+outputs/predictions/
+*.pt
+*.pth
+*.ckpt
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
