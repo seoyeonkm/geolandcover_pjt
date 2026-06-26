@@ -20,7 +20,7 @@ st.title("Satellite Land Cover Classifier")
 st.write("위성사진 이미지를 업로드하면 예측 클래스와 클래스별 확률을 보여줍니다.")
 
 default_checkpoint_path = str(
-    PROJECT_ROOT / "outputs" / "checkpoints" / "best_resnet18_eurosat.pt"
+    PROJECT_ROOT / "outputs" / "checkpoints" / "best_cnn_eurosat.pt"
 )
 
 checkpoint_path = st.text_input(

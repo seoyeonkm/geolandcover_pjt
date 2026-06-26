@@ -5,7 +5,9 @@ from typing import Dict, List, Tuple
 
 import torch
 from PIL import Image
-from torchvision import models, transforms
+from torchvision import transforms
+
+from src.models.landcover_model import SimpleLandCoverCNN
 
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -26,10 +28,10 @@ def _build_eval_transform(image_size: int = 224) -> transforms.Compose:
 
 
 def load_model_and_classes(
-    checkpoint_path: str = "outputs/checkpoints/best_resnet18_eurosat.pt",
+    checkpoint_path: str = "outputs/checkpoints/best_cnn_eurosat.pt",
     device: str | None = None,
 ) -> Tuple[torch.nn.Module, List[str], torch.device]:
-    """Load finetuned ResNet18 checkpoint and class names."""
+    """Load trained simple CNN checkpoint and class names."""
     model_device = torch.device(
         device if device else ("cuda" if torch.cuda.is_available() else "cpu")
     )
@@ -48,8 +50,7 @@ def load_model_and_classes(
     else:
         ordered_classes = DEFAULT_CLASSES
 
-    model = models.resnet18(weights=None)
-    model.fc = torch.nn.Linear(model.fc.in_features, len(ordered_classes))
+    model = SimpleLandCoverCNN(num_classes=len(ordered_classes))
     model.load_state_dict(checkpoint["model_state_dict"])
     model.to(model_device)
     model.eval()
@@ -59,7 +60,7 @@ def load_model_and_classes(
 
 def predict_proba(
     image: Image.Image,
-    checkpoint_path: str = "outputs/checkpoints/best_resnet18_eurosat.pt",
+    checkpoint_path: str = "outputs/checkpoints/best_cnn_eurosat.pt",
 ) -> Tuple[str, Dict[str, float]]:
     """Predict class and class-wise probabilities for one PIL image."""
     model, class_names, device = load_model_and_classes(checkpoint_path=checkpoint_path)
