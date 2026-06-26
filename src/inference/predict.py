@@ -17,7 +17,7 @@ DEFAULT_CLASSES = ["도시", "농지", "산림", "바다", "황무지"]
 
 
 def _build_eval_transform(image_size: int = 224) -> transforms.Compose:
-    """Create evaluation transform pipeline used during inference."""
+    """Create inference transforms (same normalize rule as training)."""
     return transforms.Compose(
         [
             transforms.Resize((image_size, image_size)),
@@ -31,7 +31,7 @@ def load_model_and_classes(
     checkpoint_path: str = "outputs/checkpoints/best_cnn_eurosat.pt",
     device: str | None = None,
 ) -> Tuple[torch.nn.Module, List[str], torch.device]:
-    """Load trained simple CNN checkpoint and class names."""
+    """Load trained CNN checkpoint and class names."""
     model_device = torch.device(
         device if device else ("cuda" if torch.cuda.is_available() else "cpu")
     )
@@ -62,7 +62,7 @@ def predict_proba(
     image: Image.Image,
     checkpoint_path: str = "outputs/checkpoints/best_cnn_eurosat.pt",
 ) -> Tuple[str, Dict[str, float]]:
-    """Predict class and class-wise probabilities for one PIL image."""
+    """Predict one image and return class probabilities."""
     model, class_names, device = load_model_and_classes(checkpoint_path=checkpoint_path)
     transform = _build_eval_transform(image_size=224)
 
@@ -71,6 +71,7 @@ def predict_proba(
 
     with torch.no_grad():
         logits = model(tensor)
+        # Convert logits to probabilities between 0 and 1.
         probs = torch.softmax(logits, dim=1).squeeze(0).cpu().tolist()
 
     prob_by_class = {

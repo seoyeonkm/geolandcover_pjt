@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Dict, Tuple
 
-from datasets import Dataset, concatenate_datasets, load_dataset
+from datasets import Dataset, load_dataset
 from PIL import Image
 import torch
 from torch.utils.data import DataLoader, Dataset as TorchDataset
@@ -38,10 +38,11 @@ class HFDatasetWithTransforms(TorchDataset):
 
 
 def _load_eurosat_full_dataset() -> Dataset:
-    """Load EuroSAT from Hugging Face and return one merged dataset.
+    """Load one usable EuroSAT split from Hugging Face.
 
-    The old identifier ("eurosat") is no longer available for many users,
-    so we try currently accessible alternatives in order.
+    For beginner projects, we keep this logic simple:
+    try a few known dataset IDs and return the first split that has
+    both image and label columns.
     """
     candidate_ids = [
         "timm/eurosat-rgb",
@@ -57,18 +58,11 @@ def _load_eurosat_full_dataset() -> Dataset:
             last_error = error
             continue
 
-        usable_splits = []
+        # Use the first split that looks like (image, label) data.
         for split_name in ds_dict.keys():
             split_features = ds_dict[split_name].features
             if "image" in split_features and "label" in split_features:
-                usable_splits.append(ds_dict[split_name])
-
-        if not usable_splits:
-            continue
-
-        if len(usable_splits) == 1:
-            return usable_splits[0]
-        return concatenate_datasets(usable_splits)
+                return ds_dict[split_name]
 
     raise RuntimeError(
         "Failed to load a usable EuroSAT dataset from Hugging Face. "

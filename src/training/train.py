@@ -10,12 +10,12 @@ from src.models.landcover_model import SimpleLandCoverCNN
 
 
 def build_cnn_model(num_classes: int) -> nn.Module:
-    """Build simple CNN model for land cover classification."""
+    """Create the CNN model used in this project."""
     return SimpleLandCoverCNN(num_classes=num_classes)
 
 
 def evaluate(model: nn.Module, data_loader, criterion: nn.Module, device: torch.device):
-    """Evaluate model on validation set and return loss/accuracy."""
+    """Run validation once and return average loss and accuracy."""
     model.eval()
     total_loss = 0.0
     total_correct = 0
@@ -47,9 +47,10 @@ def train(
     output_dir: str = "outputs/checkpoints",
     seed: int = 42,
 ) -> None:
-    """Train simple CNN model and save best checkpoint."""
+    """Train CNN with EuroSAT data and save the best model checkpoint."""
     torch.manual_seed(seed)
 
+    # Use GPU when available, otherwise CPU.
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dataloaders, id_to_label = build_eurosat_dataloaders(
         batch_size=batch_size,
@@ -71,6 +72,7 @@ def train(
     print(f"Classes: {id_to_label}")
 
     for epoch in range(1, num_epochs + 1):
+        # Training phase
         model.train()
         running_loss = 0.0
         running_correct = 0
@@ -94,6 +96,7 @@ def train(
         train_loss = running_loss / running_samples
         train_acc = running_correct / running_samples
 
+        # Validation phase
         val_loss, val_acc = evaluate(
             model=model,
             data_loader=dataloaders["val"],
@@ -107,6 +110,7 @@ def train(
             f"val_loss={val_loss:.4f} val_acc={val_acc:.4f}"
         )
 
+        # Save only when validation accuracy improves.
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(
